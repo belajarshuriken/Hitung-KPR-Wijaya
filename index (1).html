@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator KPR Interaktif 2025</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .form-input {
+            @apply w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300;
+        }
+        .result-card {
+            @apply bg-white p-6 rounded-xl shadow-md border border-gray-100;
+        }
+        .detail-tab-button {
+             @apply px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200;
+        }
+        .detail-tab-button.active {
+            @apply bg-blue-600 text-white;
+        }
+        .detail-tab-button:not(.active) {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+        }
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #555; }
+        .comparison-row { @apply cursor-pointer hover:bg-blue-50 transition-colors duration-200; }
+        .comparison-row.selected { @apply bg-blue-100 ring-2 ring-blue-400; }
+        .summary-toggle-button svg {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-700">Kalkulator Simulasi KPR 2025</h1>
+            <p class="text-gray-600 mt-2">Yang nak ngasik duit kupi, bolehlah ke Wijaya Property</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Input Form Section -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-gray-200 self-start">
+                <h2 class="text-xl font-bold mb-6 border-b pb-3 text-gray-700">Data Simulasi</h2>
+                <div class="space-y-5">
+                    <div>
+                        <label for="hargaProperti" class="font-medium text-sm text-gray-600 block mb-1">Harga Properti (Rp)</label>
+                        <input type="text" id="hargaProperti" class="form-input" value="500,000,000">
+                    </div>
+                    <div>
+                        <label for="uangMukaPersen" class="font-medium text-sm text-gray-600 block mb-1">Uang Muka (%)</label>
+                        <input type="number" id="uangMukaPersen" class="form-input" value="10" min="0" max="100">
+                    </div>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-gray-100 rounded-lg text-center">
+                            <span class="text-sm text-gray-600">Jumlah Uang Muka</span>
+                            <span id="uangMukaHasil" class="font-bold text-gray-800 block text-lg">Rp 50,000,000</span>
+                        </div>
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                            <span class="text-sm text-blue-800">Plafon Kredit (Pokok Pinjaman)</span>
+                            <span id="plafonKredit" class="font-bold text-blue-900 block text-lg">Rp 450,000,000</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="sukuBunga" class="font-medium text-sm text-gray-600 block mb-1">Suku Bunga (% per Tahun)</label>
+                        <input type="number" id="sukuBunga" class="form-input" value="6.5" step="0.1">
+                    </div>
+                </div>
+                <button id="calculateBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 mt-8 text-lg">
+                    Hitung Simulasi
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Comparison Table Card -->
+                <div class="result-card">
+                    <h2 class="text-xl font-bold mb-2 text-gray-700">Estimasi Angsuran</h2>
+                    <p class="text-sm text-gray-500 mb-4">Wijaya Property : 0823-5284-0909</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3 font-semibold text-gray-600">Jangka Waktu</th>
+                                    <th class="p-3 font-semibold text-gray-600">Angsuran / Bulan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary Dropdown Section -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-100">
+                    <button id="summaryToggleBtn" class="summary-toggle-button w-full flex justify-between items-center p-4 font-semibold text-gray-700 hover:bg-gray-50 rounded-xl">
+                        <span>Hasil Akhir Klik Disini</span>
+                        <svg id="summaryToggleIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="summaryContent" class="hidden p-4 pt-0">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                           <pre id="summaryText" class="whitespace-pre-wrap text-sm font-mono text-gray-800 leading-relaxed"></pre>
+                       </div>
+                       <button id="copyBtn" class="mt-4 w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-300">
+                           Salin Teks
+                       </button>
+                       <div id="copy-message" class="text-center text-sm text-green-600 mt-2 hidden">Teks berhasil disalin!</div>
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis Section (initially hidden) -->
+                <div id="detailSection" class="result-card hidden">
+                     <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
+                        <h2 class="text-xl font-bold text-gray-700">Detail Pinjaman <span id="detailTerm" class="text-blue-600"></span></h2>
+                        <div id="detail-tabs" class="flex space-x-2">
+                            <button class="detail-tab-button active" data-tab="amortization">Tabel Amortisasi</button>
+                            <button class="detail-tab-button" data-tab="charts">Grafik</button>
+                        </div>
+                    </div>
+                    <div id="amortizationContent" class="detail-tab-content">
+                        <div class="table-container overflow-auto max-h-96 border border-gray-200 rounded-lg">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 font-semibold text-gray-600">Bulan</th>
+                                        <th class="p-3 font-semibold text-gray-600">Angsuran Pokok</th>
+                                        <th class="p-3 font-semibold text-gray-600">Angsuran Bunga</th>
+                                        <th class="p-3 font-semibold text-gray-600">Total Angsuran</th>
+                                        <th class="p-3 font-semibold text-gray-600">Sisa Pinjaman</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="amortizationTableBody" class="divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="chartsContent" class="detail-tab-content hidden">
+                         <div class="mt-4"><canvas id="loanCompositionChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Globals and Constants ---
+        let loanCompositionChart;
+        const LOAN_TERMS = [5, 10, 15, 20];
+
+        // --- DOM Element References ---
+        const hargaPropertiInput = document.getElementById('hargaProperti');
+        const uangMukaPersenInput = document.getElementById('uangMukaPersen');
+        const uangMukaHasilEl = document.getElementById('uangMukaHasil');
+        const plafonKreditEl = document.getElementById('plafonKredit');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const comparisonTableBody = document.getElementById('comparisonTableBody');
+        const detailSection = document.getElementById('detailSection');
+        const detailTermEl = document.getElementById('detailTerm');
+        const copyBtn = document.getElementById('copyBtn');
+        const summaryToggleBtn = document.getElementById('summaryToggleBtn');
+        const summaryContent = document.getElementById('summaryContent');
+        const summaryToggleIcon = document.getElementById('summaryToggleIcon');
+
+        // --- Formatting Helpers ---
+        const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
+        const parseCurrency = (string) => Number(String(string).replace(/[^0-9]/g, ''));
+
+        // --- UI Interaction Logic ---
+        function updateDerivedValues() {
+            const hargaProperti = parseCurrency(hargaPropertiInput.value);
+            const persen = parseFloat(uangMukaPersenInput.value);
+            const uangMukaAmount = (isNaN(hargaProperti) || isNaN(persen)) ? 0 : (hargaProperti * persen) / 100;
+            const plafonKreditAmount = (isNaN(hargaProperti)) ? 0 : hargaProperti - uangMukaAmount;
+            uangMukaHasilEl.textContent = formatCurrency(uangMukaAmount);
+            plafonKreditEl.textContent = formatCurrency(plafonKreditAmount);
+        }
+
+        hargaPropertiInput.addEventListener('keyup', e => {
+            const value = parseCurrency(e.target.value);
+            if (!isNaN(value)) {
+                e.target.value = value.toLocaleString('id-ID');
+                updateDerivedValues();
+            }
+        });
+        uangMukaPersenInput.addEventListener('input', updateDerivedValues);
+        
+        // Summary Dropdown Toggle
+        summaryToggleBtn.addEventListener('click', () => {
+            summaryContent.classList.toggle('hidden');
+            summaryToggleIcon.classList.toggle('rotate-180');
+        });
+
+        // Detail Tabs Logic
+        document.getElementById('detail-tabs').addEventListener('click', e => {
+            if (e.target.tagName !== 'BUTTON') return;
+            document.querySelectorAll('.detail-tab-button').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            document.querySelectorAll('.detail-tab-content').forEach(c => {
+                 c.classList.toggle('hidden', c.id !== `${e.target.dataset.tab}Content`);
+            });
+        });
+        
+        comparisonTableBody.addEventListener('click', e => {
+            const row = e.target.closest('tr');
+            if (!row) return;
+            const selectedTerm = parseInt(row.dataset.term);
+            if (isNaN(selectedTerm)) return;
+            document.querySelectorAll('#comparisonTableBody tr').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+            detailSection.classList.remove('hidden');
+            detailTermEl.textContent = `(${selectedTerm} Tahun)`;
+            showDetailedAnalysis(selectedTerm);
+        });
+
+        // --- Calculation Logic ---
+        function calculateAndDisplaySimulations() {
+            const pokokPinjaman = parseCurrency(plafonKreditEl.textContent);
+            const sukuBunga = parseFloat(document.getElementById('sukuBunga').value);
+
+            if (isNaN(pokokPinjaman) || isNaN(sukuBunga) || pokokPinjaman < 0) {
+                alert("Mohon isi semua data dengan benar.");
+                return;
+            }
+            
+            comparisonTableBody.innerHTML = ''; 
+            detailSection.classList.add('hidden'); 
+
+            LOAN_TERMS.forEach(term => {
+                const jumlahAngsuran = term * 12;
+                const sukuBungaBulanan = sukuBunga / 100 / 12;
+                let angsuranBulanan = 0;
+                if (pokokPinjaman > 0 && sukuBunga > 0) {
+                    const calculated = pokokPinjaman * (sukuBungaBulanan * Math.pow(1 + sukuBungaBulanan, jumlahAngsuran)) / (Math.pow(1 + sukuBungaBulanan, jumlahAngsuran) - 1);
+                    angsuranBulanan = Math.ceil(calculated);
+                } else if (pokokPinjaman > 0) {
+                    angsuranBulanan = Math.ceil(pokokPinjaman / jumlahAngsuran);
+                }
+                
+                const rowHtml = `
+                    <tr class="comparison-row" data-term="${term}">
+                        <td class="p-3 font-semibold">${term} Tahun</td>
+                        <td class="p-3 font-bold text-blue-700">${formatCurrency(angsuranBulanan)}</td>
+                    </tr>`;
+                comparisonTableBody.innerHTML += rowHtml;
+            });
+            generateSummaryText();
+        }
+
+        function generateSummaryText() {
+            const hargaProperti = hargaPropertiInput.value;
+            const uangMukaPersen = uangMukaPersenInput.value;
+            const uangMukaHasil = uangMukaHasilEl.textContent;
+
+            let summary = `Simulasi Angsuran KPR Bank\n`;
+            summary += `Harga Jual Rp ${hargaProperti}\n\n`;
+            summary += `*DP ${uangMukaPersen}%* = ${uangMukaHasil}\n\n`;
+
+            document.querySelectorAll('#comparisonTableBody tr').forEach(row => {
+                const termText = row.cells[0].innerText;
+                const installmentText = row.cells[1].innerText;
+                summary += `- ${termText} ${installmentText} /bulan\n`;
+            });
+
+            document.getElementById('summaryText').innerText = summary.trim();
+        }
+        
+        function showDetailedAnalysis(term) {
+            const pokokPinjaman = parseCurrency(plafonKreditEl.textContent);
+            const sukuBunga = parseFloat(document.getElementById('sukuBunga').value);
+
+            if (isNaN(pokokPinjaman) || isNaN(sukuBunga) || pokokPinjaman <= 0) {
+                document.getElementById('amortizationTableBody').innerHTML = '';
+                if(loanCompositionChart) loanCompositionChart.destroy();
+                return;
+            }
+
+            const sukuBungaBulanan = sukuBunga / 100 / 12;
+            const jumlahAngsuran = term * 12;
+            let angsuranBulanan = 0;
+            if (sukuBunga > 0) {
+                 const calculated = pokokPinjaman * (sukuBungaBulanan * Math.pow(1 + sukuBungaBulanan, jumlahAngsuran)) / (Math.pow(1 + sukuBungaBulanan, jumlahAngsuran) - 1);
+                 angsuranBulanan = Math.ceil(calculated);
+            } else {
+                angsuranBulanan = Math.ceil(pokokPinjaman / jumlahAngsuran);
+            }
+            
+            generateAmortizationTable(pokokPinjaman, angsuranBulanan, sukuBungaBulanan, jumlahAngsuran);
+            
+            let totalBunga = 0;
+            let totalPokok = 0;
+            document.querySelectorAll('#amortizationTableBody tr').forEach(row => {
+                 totalPokok += parseCurrency(row.cells[1].innerText);
+                 totalBunga += parseCurrency(row.cells[2].innerText);
+            });
+            updateCharts(totalPokok, totalBunga);
+        }
+
+        function generateAmortizationTable(pokokPinjaman, angsuranBulanan, sukuBungaBulanan, jumlahAngsuran) {
+            const tableBody = document.getElementById('amortizationTableBody');
+            tableBody.innerHTML = '';
+            let sisaPinjaman = pokokPinjaman;
+            
+            for (let i = 1; i <= jumlahAngsuran; i++) {
+                if (sisaPinjaman <= 0) break;
+
+                const bungaBulanIni = sisaPinjaman * sukuBungaBulanan;
+                let pokokBulanIni = angsuranBulanan - bungaBulanIni;
+                let angsuranBulanIni = angsuranBulanan;
+
+                if (sisaPinjaman <= pokokBulanIni || i === jumlahAngsuran) {
+                    pokokBulanIni = sisaPinjaman;
+                    angsuranBulanIni = pokokBulanIni + bungaBulanIni;
+                }
+                
+                sisaPinjaman -= pokokBulanIni;
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">${i}</td>
+                        <td class="p-3">${formatCurrency(pokokBulanIni)}</td>
+                        <td class="p-3">${formatCurrency(bungaBulanIni)}</td>
+                        <td class="p-3 font-medium">${formatCurrency(angsuranBulanIni)}</td>
+                        <td class="p-3">${formatCurrency(sisaPinjaman > 0 ? sisaPinjaman : 0)}</td>
+                    </tr>`;
+            }
+        }
+        
+        function updateCharts(pokokPinjaman, totalBunga) {
+            if (loanCompositionChart) loanCompositionChart.destroy();
+            loanCompositionChart = new Chart(document.getElementById('loanCompositionChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Total Pokok', 'Total Bunga'],
+                    datasets: [{ data: [pokokPinjaman, totalBunga], backgroundColor: ['#3b82f6', '#ef4444'], borderColor: '#ffffff', borderWidth: 3 }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Komposisi Pinjaman' },
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.raw)}` } }
+                    }
+                }
+            });
+        }
+        
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = document.getElementById('summaryText').innerText;
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const copyMessage = document.getElementById('copy-message');
+                copyMessage.classList.remove('hidden');
+                setTimeout(() => copyMessage.classList.add('hidden'), 2000);
+            } catch (err) {
+                console.error('Gagal menyalin teks', err);
+            }
+            document.body.removeChild(textArea);
+        });
+        
+        // --- Initial Load ---
+        calculateBtn.addEventListener('click', calculateAndDisplaySimulations);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDerivedValues();
+            calculateBtn.click();
+        });
+    </script>
+
+</body>
+</html>
